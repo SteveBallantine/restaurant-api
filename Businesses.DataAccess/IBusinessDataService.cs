@@ -34,5 +34,5 @@ public interface IBusinessDataService {
     /// <returns>
     /// The matching <see cref="Business"> instance or null if there is no match.
     /// </returns>
-    public Task<Business> GetAsync(int id);
+    public Task<Business> GetAsync(string id);
 }

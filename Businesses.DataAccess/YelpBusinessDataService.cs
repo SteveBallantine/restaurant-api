@@ -23,7 +23,7 @@ public class YelpBusinessDataService : IBusinessDataService
         throw new NotImplementedException();
     }
 
-    public Task<Business> GetAsync(int id)
+    public Task<Business> GetAsync(string id)
     {
         throw new NotImplementedException();
     }
