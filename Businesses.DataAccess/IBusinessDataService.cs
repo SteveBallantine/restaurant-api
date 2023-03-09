@@ -23,7 +23,7 @@ public interface IBusinessDataService {
     /// A collection of <see cref="Business"> instances that match the supplied parameters.
     /// If there is no match then the enumeration will contain no elements.
     /// </returns>
-    public Task<IEnumerable<Business>> SearchAsync(string location, string businessType, string term);
+    public Task<IList<Business>> SearchAsync(string location, string businessType, string term);
 
     /// <summary>
     /// Get the details for the specified business 

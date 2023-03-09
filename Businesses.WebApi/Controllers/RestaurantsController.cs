@@ -35,7 +35,7 @@ public class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async IAsyncEnumerable<Business> SearchAsync(string location, string term)
+    public async Task<IList<Business>> SearchAsync(string location, string term)
     {
     }
 
