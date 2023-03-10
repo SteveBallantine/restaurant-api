@@ -1,7 +1,9 @@
 
+using System.Text.Json;
 using Businesses.DataAccess.Configuration;
 using Businesses.DataAccess.Data;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Businesses.DataAccess;
 
@@ -14,6 +16,12 @@ public class YelpBusinessDataService : IBusinessDataService
     private readonly HttpClient _httpClient;
     private readonly YelpSettings _settings;
 
+    // The Yelp data is in a slightly different format, so use a custom resolver to deserialise it.
+    private readonly JsonSerializerSettings _serialiserSettings = new JsonSerializerSettings()
+    {
+        ContractResolver = new YelpContractResolver()
+    };
+
     public YelpBusinessDataService(ILogger<YelpBusinessDataService> logger,
         HttpClient httpClient, YelpSettings settings) 
     {
@@ -22,13 +30,71 @@ public class YelpBusinessDataService : IBusinessDataService
         _settings = settings;
     }
 
-    public Task<IList<Business>> SearchAsync(string location, string businessType, string term)
+    public async Task<IList<Business>> SearchAsync(string location, string businessType, string term)
     {
-        throw new NotImplementedException();
+        return null;
     }
 
-    public Task<Business> GetAsync(string id)
+    /// <summary>
+    /// Get the details for the specified business 
+    /// </summary>
+    /// <param name="id">
+    /// The Id of the business to get details for
+    /// </param>
+    /// <returns>
+    /// The matching <see cref="Business"> instance or null if there is no match.
+    /// </returns>
+    /// <exception cref="HttpRequestException">
+    /// Thrown if exceptions occur when contacting the remote server
+    /// </exception>
+    public async Task<Business?> GetAsync(string id)
     {
-        throw new NotImplementedException();
+        using(HttpRequestMessage message = new HttpRequestMessage() {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri($"{_settings.BaseUrl}/{id}")
+        })
+        {
+            AddAuthHeader(message);
+            var response = await _httpClient.SendAsync(message);
+
+            switch (response.StatusCode)
+            {
+                case System.Net.HttpStatusCode.OK:
+                    return await HandleResponseAsync<Business>(response);
+                default:
+                    _logger.LogError($"Call to Yelp API unsuccessful. Status code {response.StatusCode}");
+                    return null;
+            }
+        }
     }
+
+    protected void AddAuthHeader(HttpRequestMessage message)
+    {
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", _settings.ApiKey);
+    }
+
+    private async Task<T?> HandleResponseAsync<T>(HttpResponseMessage response)
+        where T : class?
+    {                            
+        try
+        {
+            if(response.Content != null)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(content, _serialiserSettings);
+            } 
+            else 
+            {
+                _logger.LogError($"Yelp API response is null.");
+                return null;
+            }
+
+        }
+        catch (Exception ex) 
+        {
+            _logger.LogError(ex, $"Error parsing Yelp API response.");
+            return null;
+        }
+    }
+
 }

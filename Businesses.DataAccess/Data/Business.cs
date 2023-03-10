@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Businesses.DataAccess.Data;
 
@@ -10,9 +10,9 @@ public class Business
     public string? Id {get;set;}
     public string? Name {get;set;}
     public Location? Location {get;set;}
-    [JsonPropertyName("image_url")]
+    [JsonProperty("image_url")]
     public string? ImageUrl {get;set;}
-    [JsonPropertyName("review_count")]
+    [JsonProperty("review_count")]
     public int? ReviewCount {get;set;}
     public float? Rating {get;set;}
     public string? Phone {get;set;}
