@@ -1,5 +1,4 @@
 
-using System.Text.Json;
 using Businesses.DataAccess.Configuration;
 using Businesses.DataAccess.Data;
 using Microsoft.Extensions.Logging;
@@ -30,9 +29,29 @@ public class YelpBusinessDataService : IBusinessDataService
         _settings = settings;
     }
 
-    public async Task<IList<Business>> SearchAsync(string location, string businessType, string term)
+    public async Task<IList<Business>?> SearchAsync(string location, string businessType, string term)
     {
-        return null;
+        using(HttpRequestMessage message = new HttpRequestMessage() {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri($"{_settings.BaseUrl}?" +
+                $"{Constants.YelpParameter_Location}={location}&" +
+                $"{Constants.YelpParameter_Term}={businessType}&" + 
+                $"{Constants.YelpParameter_Categories}={term}")
+        })
+        {
+            AddAuthHeader(message);
+            var response = await _httpClient.SendAsync(message);
+
+            switch (response.StatusCode)
+            {
+                case System.Net.HttpStatusCode.OK:
+                    var collection = await HandleResponseAsync<BusinessCollection>(response);
+                    return collection?.Businesses;
+                default:
+                    _logger.LogError($"Call to Yelp API unsuccessful. Status code {response.StatusCode}");
+                    return null;
+            }
+        }
     }
 
     /// <summary>
@@ -68,6 +87,12 @@ public class YelpBusinessDataService : IBusinessDataService
         }
     }
 
+    /// <summary>
+    /// Add the authorisation header that is required to access the Yelp API.
+    /// </summary>
+    /// <param name="message">
+    /// The message to add the header to.
+    /// </param>
     protected void AddAuthHeader(HttpRequestMessage message)
     {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", _settings.ApiKey);
@@ -80,18 +105,21 @@ public class YelpBusinessDataService : IBusinessDataService
         {
             if(response.Content != null)
             {
+                // Parse and return result
                 var content = await response.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<T>(content, _serialiserSettings);
             } 
             else 
             {
+                // If response content is null, log an error and return null
                 _logger.LogError($"Yelp API response is null.");
                 return null;
             }
 
         }
-        catch (Exception ex) 
+        catch (JsonException ex) 
         {
+            // If there is an error deserialising the response then log an error and return null
             _logger.LogError(ex, $"Error parsing Yelp API response.");
             return null;
         }

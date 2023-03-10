@@ -50,7 +50,9 @@ public class BusinessDataServiceTests
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
-        protectedMock.Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>()).Verifiable();
+        protectedMock.Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("") })
+            .Verifiable();
 
         // Call the service
         var result = await _service.SearchAsync("searchLocation", "searchType", "searchTerm");
@@ -61,12 +63,13 @@ public class BusinessDataServiceTests
             Times.Exactly(1),
             ItExpr.Is<HttpRequestMessage>(r => 
                 r.Method == HttpMethod.Get &&
-                r.Headers.Contains("Authorization") &&
-                r.Headers.GetValues("Authorization").Single().Contains(_settings.ApiKey) &&
+                r.Headers.Contains(HttpRequestHeader.Authorization.ToString()) &&
+                r.Headers.GetValues(HttpRequestHeader.Authorization.ToString()).Any(v => v.Contains(_settings.ApiKey)) &&
                 r.RequestUri != null &&
-                r.RequestUri.Query.Contains("term=searchType") &&
-                r.RequestUri.Query.Contains("categories=searchTerm") &&
-                r.RequestUri.Query.Contains("location=searchLocation")));
+                r.RequestUri.Query.Contains($"{Constants.YelpParameter_Term}=searchType") &&
+                r.RequestUri.Query.Contains($"{Constants.YelpParameter_Categories}=searchTerm") &&
+                r.RequestUri.Query.Contains($"{Constants.YelpParameter_Location}=searchLocation")),
+            ItExpr.IsAny<CancellationToken>());
 
         // Verify no errors logged
         _mockLogger.VerifyNoErrorsOrWarnings();
@@ -156,6 +159,7 @@ public class BusinessDataServiceTests
         var result = await _service.SearchAsync("searchLocation", "searchType", "searchTerm");
 
         // Verify result
+        Assert.IsNotNull(result);
         Assert.AreEqual(1, result.Count);
         Assert.AreEqual(expectedId, result[0].Id);
         Assert.AreEqual(expectedImageUrl, result[0].ImageUrl);
@@ -182,7 +186,6 @@ public class BusinessDataServiceTests
     [DataRow(HttpStatusCode.TooManyRequests)]
     [DataRow(HttpStatusCode.InternalServerError)]
     [DataRow(HttpStatusCode.ServiceUnavailable)]
-    [ExpectedException(typeof(DataAccessException))]
     public async Task Search_VerifyFailResponseBehavior(HttpStatusCode yelpResponseCode)
     {        
         // Ensure nullable values are not null
@@ -216,7 +219,9 @@ public class BusinessDataServiceTests
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
-        protectedMock.Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>()).Verifiable();
+        protectedMock.Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("") })
+            .Verifiable();
 
         // Call the service
         var result = await _service.GetAsync("searchId");
@@ -227,10 +232,11 @@ public class BusinessDataServiceTests
             Times.Exactly(1),
             ItExpr.Is<HttpRequestMessage>(r => 
                 r.Method == HttpMethod.Get &&
-                r.Headers.Contains("Authorization") &&
-                r.Headers.GetValues("Authorization").Single().Contains(_settings.ApiKey) &&
+                r.Headers.Contains(HttpRequestHeader.Authorization.ToString()) &&
+                r.Headers.GetValues(HttpRequestHeader.Authorization.ToString()).Any(v => v.Contains(_settings.ApiKey)) &&
                 r.RequestUri != null &&
-                r.RequestUri.PathAndQuery.Contains("searchId")));
+                r.RequestUri.PathAndQuery.Contains("searchId")),
+            ItExpr.IsAny<CancellationToken>());
 
         // Verify no errors logged
         _mockLogger.VerifyNoErrorsOrWarnings();
