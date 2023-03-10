@@ -24,7 +24,8 @@ public class BusinessDataServiceTests
     private readonly YelpSettings _settings = new YelpSettings() 
     {
         ClientId = "abc",
-        ApiKey = "xyz"
+        ApiKey = "xyz",
+        BaseUrl = "https://www.exampleapi.com/api"
     };
 
     [TestInitialize]
@@ -249,6 +250,15 @@ public class BusinessDataServiceTests
         var expectedRating = 5;
         var expectedPhone = "+16207676242";
 
+        var expectedAdd1 = "410 E Main St";
+        var expectedCity = "Council Grove";
+        var expectedState = "KS";
+        var expectedZip = "66846";
+
+        var expectedCategories = 3;
+        var expectedAlias = "steak";
+        var expectedTitle = "Steakhouses";
+
         // Sample response taken from a real query
         var yelpResponse = $@"{{
       ""id"": ""{expectedId}"",
@@ -264,8 +274,8 @@ public class BusinessDataServiceTests
           ""title"": ""Comfort Food""
         }},
         {{
-          ""alias"": ""steak"",
-          ""title"": ""Steakhouses""
+          ""alias"": ""{expectedAlias}"",
+          ""title"": ""{expectedTitle}""
         }},
         {{
           ""alias"": ""burgers"",
@@ -279,13 +289,13 @@ public class BusinessDataServiceTests
       }},
       ""transactions"": [],
       ""location"": {{
-        ""address1"": ""410 E Main St"",
+        ""address1"": ""{expectedAdd1}"",
         ""address2"": null,
         ""address3"": null,
-        ""city"": ""Council Grove"",
-        ""zip_code"": ""66846"",
+        ""city"": ""{expectedCity}"",
+        ""zip_code"": ""{expectedZip}"",
         ""country"": ""US"",
-        ""state"": ""KS"",
+        ""state"": ""{expectedState}"",
         ""display_address"": [
           ""410 E Main St"",
           ""Council Grove, KS 66846""
@@ -399,6 +409,18 @@ public class BusinessDataServiceTests
         Assert.AreEqual(expectedPhone, result.Phone);
         Assert.AreEqual(expectedRating, result.Rating);
         Assert.AreEqual(expectedReviewCount, result.ReviewCount);
+
+        Assert.IsNotNull(result.Location);
+        Assert.AreEqual(expectedAdd1, result.Location.Address1);
+        Assert.IsNull(result.Location.Address2);
+        Assert.AreEqual(expectedCity, result.Location.City);
+        Assert.AreEqual(expectedState, result.Location.State);
+        Assert.AreEqual(expectedZip, result.Location.Zip);
+
+        Assert.IsNotNull(result.Categories);
+        Assert.AreEqual(expectedCategories, result.Categories.Count);
+        Assert.IsTrue(result.Categories.Any(c => c.Alias == expectedAlias));
+        Assert.IsTrue(result.Categories.Any(c => c.Title == expectedTitle));
 
         // Verify no errors logged
         _mockLogger.VerifyNoErrorsOrWarnings();
