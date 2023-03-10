@@ -1,5 +1,6 @@
 using Businesses.DataAccess.Configuration;
 using Businesses.DataAccess.Data;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
@@ -17,7 +18,9 @@ namespace Businesses.DataAccess.Tests;
 public class BusinessDataServiceTests
 {
     private Mock<HttpMessageHandler>? _mockHttpHandler;
+    private Mock<ILogger<YelpBusinessDataService>>? _mockLogger;
     private YelpBusinessDataService? _service;
+
     private readonly YelpSettings _settings = new YelpSettings() 
     {
         ClientId = "abc",
@@ -26,9 +29,10 @@ public class BusinessDataServiceTests
 
     [TestInitialize]
     public void Init()
-    {
+    {      
         _mockHttpHandler = new Mock<HttpMessageHandler>();
-        _service = new YelpBusinessDataService(new HttpClient(_mockHttpHandler.Object), _settings);
+        _mockLogger = new Mock<ILogger<YelpBusinessDataService>>();
+        _service = new YelpBusinessDataService(_mockLogger.Object, new HttpClient(_mockHttpHandler.Object), _settings);
     }
 
     /// <summary>
@@ -41,6 +45,7 @@ public class BusinessDataServiceTests
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
         Helpers.ThrowIf(_settings.ApiKey == null, nameof(_settings.ApiKey));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
@@ -61,6 +66,9 @@ public class BusinessDataServiceTests
                 r.RequestUri.Query.Contains("term=searchType") &&
                 r.RequestUri.Query.Contains("categories=searchTerm") &&
                 r.RequestUri.Query.Contains("location=searchLocation")));
+
+        // Verify no errors logged
+        _mockLogger.VerifyNoErrorsOrWarnings();
     }
 
     /// <summary>
@@ -71,6 +79,7 @@ public class BusinessDataServiceTests
     {        
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         var expectedId = "G0AB4-VN3v_Qd-icr8BfEg";
         var expectedName = "Flint Hills Saloon & Eatery";
@@ -153,6 +162,9 @@ public class BusinessDataServiceTests
         Assert.AreEqual(expectedPhone, result[0].Phone);
         Assert.AreEqual(expectedRating, result[0].Rating);
         Assert.AreEqual(expectedReviewCount, result[0].ReviewCount);
+
+        // Verify no errors logged
+        _mockLogger.VerifyNoErrorsOrWarnings();
     }
 
     /// <summary>
@@ -174,6 +186,7 @@ public class BusinessDataServiceTests
     {        
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
@@ -182,6 +195,9 @@ public class BusinessDataServiceTests
 
         // Call the service
         var result = await _service.SearchAsync("searchLocation", "searchType", "searchTerm");
+
+        // Verify error logged
+        _mockLogger.VerifyLogMessageCount(LogLevel.Error, 1);
     }
 
 
@@ -195,6 +211,7 @@ public class BusinessDataServiceTests
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
         Helpers.ThrowIf(_settings.ApiKey == null, nameof(_settings.ApiKey));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
@@ -213,6 +230,9 @@ public class BusinessDataServiceTests
                 r.Headers.GetValues("Authorization").Single().Contains(_settings.ApiKey) &&
                 r.RequestUri != null &&
                 r.RequestUri.PathAndQuery.Contains("searchId")));
+
+        // Verify no errors logged
+        _mockLogger.VerifyNoErrorsOrWarnings();
     }
     
     [TestMethod]
@@ -220,6 +240,7 @@ public class BusinessDataServiceTests
     {        
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         var expectedId = "G0AB4-VN3v_Qd-icr8BfEg";
         var expectedName = "Flint Hills Saloon & Eatery";
@@ -378,6 +399,9 @@ public class BusinessDataServiceTests
         Assert.AreEqual(expectedPhone, result.Phone);
         Assert.AreEqual(expectedRating, result.Rating);
         Assert.AreEqual(expectedReviewCount, result.ReviewCount);
+
+        // Verify no errors logged
+        _mockLogger.VerifyNoErrorsOrWarnings();
     }
 
     /// <summary>
@@ -394,11 +418,11 @@ public class BusinessDataServiceTests
     [DataRow(HttpStatusCode.TooManyRequests)]
     [DataRow(HttpStatusCode.InternalServerError)]
     [DataRow(HttpStatusCode.ServiceUnavailable)]
-    [ExpectedException(typeof(DataAccessException))]
     public async Task Get_VerifyFailResponseBehavior(HttpStatusCode yelpResponseCode)
     {        
         // Ensure nullable values are not null
         Helpers.ThrowIf(_service == null, nameof(_service));
+        Helpers.ThrowIf(_mockLogger == null, nameof(_mockLogger));
 
         // Configure mock http handler
         var protectedMock = _mockHttpHandler.Protected();
@@ -407,6 +431,11 @@ public class BusinessDataServiceTests
 
         // Call the service
         var result = await _service.GetAsync("id");
+
+        // Verify error logged
+        _mockLogger.VerifyLogMessageCount(LogLevel.Error, 1);
     }
+
+
 
 }

@@ -1,6 +1,7 @@
 
 using Businesses.DataAccess.Configuration;
 using Businesses.DataAccess.Data;
+using Microsoft.Extensions.Logging;
 
 namespace Businesses.DataAccess;
 
@@ -9,11 +10,14 @@ namespace Businesses.DataAccess;
 /// </summary>
 public class YelpBusinessDataService : IBusinessDataService
 {
+    private readonly ILogger<YelpBusinessDataService> _logger;
     private readonly HttpClient _httpClient;
     private readonly YelpSettings _settings;
 
-    public YelpBusinessDataService(HttpClient httpClient, YelpSettings settings) 
+    public YelpBusinessDataService(ILogger<YelpBusinessDataService> logger,
+        HttpClient httpClient, YelpSettings settings) 
     {
+        _logger = logger;
         _httpClient = httpClient;
         _settings = settings;
     }
