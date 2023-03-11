@@ -40,6 +40,7 @@ public class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ResponseCache(CacheProfileName = Constants.ApiCacheProfileName)]
     public async Task<IList<Business>?> SearchAsync(string location, string term)
     {
         // Check for nulls
@@ -71,6 +72,7 @@ public class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ResponseCache(CacheProfileName = Constants.ApiCacheProfileName)]    
     public async Task<Business?> GetAsync(string id)
     {
         // Check for nulls
