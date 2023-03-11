@@ -21,7 +21,7 @@ From the terminal:
 
 Run all tests by executing `dotnet test` in the root directory.
 
-# Docuemntation
+# Documentation
 
 Swagger docs are available at:
 
