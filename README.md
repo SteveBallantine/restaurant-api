@@ -10,7 +10,7 @@ A RESTful web API that returns information about restaurants
 
 # Setup
 
-The WebApi project uses the dotnet [secrets manager](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows) to store the Yelp API key and it's own authorization key, which is required when calling its end points.
+The WebApi project uses the dotnet [secrets manager](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows) to store the Yelp API key and its own authorization key, which is required when calling its end points.
 
 From the terminal:
 - Navigate to the `Businesses.WebApi` project directory.
