@@ -1,15 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Businesses.WebApi</RootNamespace>
+    <UserSecretsId>3dbdec47-b472-41a6-bbe0-de6c60042095</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
-    <ProjectReference Include = "..\Businesses.DataAccess\Businesses.DataAccess.csproj" />
+    <ProjectReference Include="..\Businesses.DataAccess\Businesses.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

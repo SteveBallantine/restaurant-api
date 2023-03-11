@@ -1,4 +1,6 @@
 using Businesses.DataAccess;
+using Businesses.DataAccess.Configuration;
+using Businesses.WebApi.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add our settings objects to the DI container.
+builder.Services.AddSingleton(builder.Configuration.GetSection("YelpSettings").Get<YelpSettings>());
+builder.Services.AddSingleton(builder.Configuration.GetSection("WebApiSettings").Get<WebApiSettings>());
+
+// Add an HttpClient instance
 builder.Services.AddSingleton<HttpClient>(new HttpClient());
+// Use the YelpBusinessDataService
 builder.Services.AddSingleton<IBusinessDataService, YelpBusinessDataService>();
 
 var app = builder.Build();

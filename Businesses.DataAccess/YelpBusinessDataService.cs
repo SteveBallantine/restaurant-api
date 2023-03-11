@@ -33,7 +33,7 @@ public class YelpBusinessDataService : IBusinessDataService
     {
         using(HttpRequestMessage message = new HttpRequestMessage() {
             Method = HttpMethod.Get,
-            RequestUri = new Uri($"{_settings.BaseUrl}?" +
+            RequestUri = new Uri($"{_settings.BaseUrl}/search?" +
                 $"{Constants.YelpParameter_Location}={location}&" +
                 $"{Constants.YelpParameter_Term}={businessType}&" + 
                 $"{Constants.YelpParameter_Categories}={term}")

@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Businesses.DataAccess.Data;
 using Businesses.DataAccess;
+using Businesses.WebApi.Configuration;
 
 namespace Businesses.WebApi.Controllers;
 
@@ -10,13 +12,16 @@ public class RestaurantsController : ControllerBase
 {
     private readonly ILogger<RestaurantsController> _logger;
     private readonly IBusinessDataService _dataService;
+    private readonly WebApiSettings _settings;
 
     public RestaurantsController(
         ILogger<RestaurantsController> logger,
-        IBusinessDataService dataService)
+        IBusinessDataService dataService,
+        WebApiSettings settings)
     {
         _logger = logger;
         _dataService = dataService;
+        _settings = settings;
     }
 
     /// <summary>
@@ -35,8 +40,20 @@ public class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IList<Business>> SearchAsync(string location, string term)
+    public async Task<IList<Business>?> SearchAsync(string location, string term)
     {
+        // Check for nulls
+        Helpers.ThrowIf(_settings.BusinessType == null, nameof(_settings.BusinessType));
+
+        // TODO - Verify Authorize header set correctly. If not - return 401
+
+        var result = await _dataService.SearchAsync(location, _settings.BusinessType, term);
+        if(result == null)
+        {
+            // Result is null. Failure has been logged, so just return a 500.
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+        }
+        return result;
     }
 
     /// <summary>
@@ -54,7 +71,19 @@ public class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<Business> GetAsync(string id)
+    public async Task<Business?> GetAsync(string id)
     {
+        // Check for nulls
+        Helpers.ThrowIf(_settings.BusinessType == null, nameof(_settings.BusinessType));
+
+        // TODO - Verify Authorize header set correctly. If not - return 401
+
+        var result = await _dataService.GetAsync(id);
+        if(result == null)
+        {
+            // Result is null. Failure has been logged, so just return a 500.
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+        }
+        return result;
     }
 }
